@@ -1,18 +1,19 @@
 {
   "name": "node-red-contrib-node-lifx",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "description": "Control LIFX lights using Node-RED.",
   "author": "jdomeij",
   "maintainers": [
-    "Ristomatti Airo <ristomatti.airo@gmail.com>"
+    "Ristomatti Airo <ristomatti.airo@gmail.com>",
+    "hufftheweevil <jhalbsgut@gmail.com>"
   ],
-  "homepage": "https://github.com/ristomatti/node-red-contrib-node-lifx",
+  "homepage": "https://github.com/hufftheweevil/node-red-contrib-node-lifx",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ristomatti/node-red-contrib-node-lifx.git"
+    "url": "https://github.com/hufftheweevil/node-red-contrib-node-lifx.git"
   },
   "bugs": {
-    "url": "https://github.com/ristomatti/node-red-contrib-node-lifx/issues"
+    "url": "https://github.com/hufftheweevil/node-red-contrib-node-lifx/issues"
   },
   "keywords": [
     "node-red",
@@ -22,9 +23,9 @@
   ],
   "node-red": {
     "nodes": {
-      "node-lifx-out": "red/lifx-output.js",
-      "node-lifx-in": "red/lifx-input.js",
-      "node-lifx-server": "red/lifx-server.js"
+      "lifx out": "red/lifx-out.js",
+      "lifx in": "red/lifx-in.js",
+      "lifx server": "red/lifx-server.js"
     }
   },
   "main": "lib/lifx-server.js",

@@ -1,0 +1,150 @@
+<script type="text/html" data-template-name="lifx in">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+  <div class="form-row">
+    <label for="node-input-server"><i class="fa fa-globe"></i> Lifx server</label>
+    <input type="text" id="node-input-server" placeholder="Server">
+  </div>
+  <div class="form-row" style="white-space: nowrap; height: 200px">
+    <label for="node-input-lightID"><i class="fa fa-lightbulb-o"></i> Light ID</label>
+    <div style="display: inline-block; position: relative; width: 70%; height: 20px;">
+      <div style="position: absolute; left: 0px; right: 40px;">
+        <input type="text" id="node-input-lightID" placeholder="Press button to list available lights" style="width: 100%;">
+      </div>
+      <a id="node-lookup-lights" class="editor-button" style="position: absolute; right: 0px; top: 0px;"><i class="fa fa-search"></i></a>
+    </div>
+  </div>
+</script>
+
+<script type="text/html" data-help-name="lifx in">
+  <h3>Output</h3>
+  <p>Triggered on light changes. The following information will be returned on light changes:</p>
+  <ul>
+    <li><code>topic</code> - Light ID</li>
+    <li><code>payload</code> - Required. An object that commands the light
+      <ul>
+        <li><code>on</code> On/Off boolean</li>
+        <li><code>reachable</code> Online/Offline status</li>
+        <li><code>mode</code> Brightness, Color or Temperature representing the current working mode for the light</li>
+
+        <li><code>bri</code>/<code>brightness</code> Brightness value (0-100%)</li>
+
+        <li><code>hsv</code> Current color represented in <b>HSV</b> array</li>
+        <li><code>rgb</code> Current color represented in <b>RGB</b> array</li>
+
+        <li><code>mired</code> Mired temperature color</li>
+        <li><code>kelvin</code> Kelvin temperature color</li>
+
+        <li><code>hex</code> Current color as hex value</li>
+        <li><code>color</code> Closest color name for current color</li>
+      </ul>
+    </li>
+  </ul>
+</script>
+
+<script type="text/javascript">
+  /* eslint require-jsdoc: 0 */
+  /* eslint-env jquery */
+
+  RED.nodes.registerType('lifx in', {
+    category: 'devices',
+    defaults: {
+      server: { value: 'Lifx Server', required: true, type: 'lifx server' },
+      name: { required: false },
+      lightID: { required: false }
+    },
+    color: '#f49242',
+    inputs: 0,
+    outputs: 1,
+
+    icon: 'light.png',
+    label: function () {
+      return this.name || 'lifx'
+    },
+    labelStyle: function () {
+      return this.name ? 'node_label_italic' : ''
+    },
+    oneditprepare: function () {
+      var htmlID = '#node-input-lightID'
+      var htmlText =
+        '<input type="text" id="node-input-lightID" placeholder="Light ID" style="width: 100%;">'
+      var htmlCombo =
+        '<select multiple   id="node-input-lightID" placeholder="Light ID" style="width: 100%; height: 200px"/>'
+
+      function enableCombobox() {
+        var val = $(htmlID).val()
+
+        var serverConfig = RED.nodes.node($('#node-input-server').val())
+        if (serverConfig && serverConfig.id) {
+          $.getJSON('node-lifx/lights', { server: serverConfig.id })
+            .done(function (data, status) {
+              // No data returned
+              if (!data || data.length <= 0) {
+                RED.notify('No lights found', 'error')
+                return
+              }
+
+              // Convert to select
+              $('#node-lookup-lights > i')
+                .toggleClass('fa-search', false)
+                .toggleClass('fa-edit', true)
+              $(htmlID).replaceWith(htmlCombo)
+
+              data.sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id))
+
+              // Add option
+              var input = $(htmlID)
+              data.forEach(function (light) {
+                input.append(
+                  $('<option>')
+                    .val(light.id)
+                    .text((light.name || light.id) + (light.info ? ' (' + light.info + ')' : ''))
+                )
+              })
+
+              let vals = Array.isArray(val) ? val : val.split(',')
+
+              vals.forEach(val => {
+                // Check if value match any existing and if not add it as unknown entry
+                if (val.length && data.find(light => light.id === val) === undefined) {
+                  input.prepend(
+                    $('<option/>')
+                      .val(val)
+                      .text('Unknown "' + val + '"')
+                  )
+                }
+              })
+
+              // Mark current values
+              input.val(vals)
+            })
+            .fail(function (err) {
+              RED.notify(err.responseText, 'error')
+            })
+        }
+      }
+
+      function enableTextbox() {
+        var val = $(htmlID).val()
+
+        // Convert to text
+        $('#node-lookup-lights > i').toggleClass('fa-search', true).toggleClass('fa-edit', false)
+        $(htmlID).replaceWith(htmlText)
+
+        // Insert current value
+        $(htmlID).val(val)
+      }
+
+      $('#node-lookup-lights').click(function () {
+        console.log('click', $(htmlID).attr('type'))
+        if ($(htmlID).attr('type') === 'text') {
+          enableCombobox()
+        } else {
+          enableTextbox()
+        }
+      })
+    }
+  })
+</script>

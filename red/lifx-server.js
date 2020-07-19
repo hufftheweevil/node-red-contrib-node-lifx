@@ -1,90 +1,88 @@
-"use strict";
+'use strict'
 
-var LightServer  = require('../lib/lifx-server.js');
+let LightServer = require('../lib/lifx-server.js')
 
 /**
  * Exports LightServer to Node-Red
  * @param  {object} RED Node-red
  */
-module.exports = function(RED) {
+module.exports = function (RED) {
   // list of servers
-  var lifxServerList = {};
+  let lifxServerList = new Map()
 
   /**
    * LightServer wrapper for Node-Red
    * @param {object} config Configuration
    */
   function LightServerWrapper(config) {
-    var self = this;
-    RED.nodes.createNode(self, config);
+    let self = this
+
+    RED.nodes.createNode(this, config)
 
     self.config = {
-      name:     config.name,
-      key:      config.key,
-      network:  config.network,
-      interval: config.interval,
-    };
+      name: config.name,
+      // key: config.key,
+      // network: config.network,
+      interval: config.interval
+    }
 
     // Create server
     try {
-      this.lightServer = new LightServer(config);
-    }
-    catch (e) {
-      self.error(e.message, e.stack);
-      return;
+      this.lightServer = new LightServer(config)
+    } catch (e) {
+      self.error(e.message, e.stack)
+      return
     }
 
     // Create wrapper functions
-    this.getLightHandler = this.lightServer.getLightHandler.bind(this.lightServer);
-    this.getLights       = this.lightServer.getLights.bind(this.lightServer);
+    this.getLightHandler = this.lightServer.getLightHandler.bind(this.lightServer)
+    this.getLights = this.lightServer.getLights.bind(this.lightServer)
 
     // Handle close event
-    self.on('close', () => {
-      self.lightServer.stop();
-
-      delete lifxServerList[self.id];
-    });
+    this.on('close', () => {
+      this.lightServer.stop()
+      lifxServerList.delete(this.id)
+    })
 
     // Server errors
     this.lightServer.on('error', (msg, obj) => {
-      self.error(msg, obj);
-    });
+      this.error(msg, obj)
+    })
 
     // Server warnings
     this.lightServer.on('warning', (msg, obj) => {
-      self.warn(msg, obj);
-    });
+      if (msg == 'No LIFX response in time') return // Ignore
+      this.warn(msg, obj)
+    })
 
-
-    this.lightServer.init((err) => {
+    this.lightServer.init(err => {
       if (err) {
-        self.error(err.message, err.stack);
-        return;
+        this.error(err.message, err.stack)
+        return
       }
-      lifxServerList[self.id] = self;
-    });
-
+      lifxServerList.set(this.id, this)
+    })
   }
 
-  RED.nodes.registerType("node-lifx-server", LightServerWrapper);
+  RED.nodes.registerType('lifx server', LightServerWrapper)
 
   // Get list of lights
-  RED.httpAdmin.get('/node-lifx/lights', function(req, res) {
-    if(!req.query.server) {
-      res.status(500).send("Missing arguments");
-      return;
+  RED.httpAdmin.get('/node-lifx/lights', function (req, res) {
+    if (!req.query.server) {
+      res.status(500).send('Missing arguments')
+      return
     }
 
     // Query server for information
-    if (lifxServerList.hasOwnProperty(req.query.server)) {
-      var server = lifxServerList[req.query.server];
+    if (lifxServerList.has(req.query.server)) {
+      let server = lifxServerList.get(req.query.server)
 
-      res.set({'content-type': 'application/json; charset=utf-8'})
-      res.end(JSON.stringify(server.getLights()));
-      return;
+      res.set({ 'content-type': 'application/json; charset=utf-8' })
+      res.end(JSON.stringify(server.getLights()))
+      return
     }
 
-    res.status(500).send("Server not found or not activated");
-    return;
-  });
+    res.status(500).send('Server not found or not activated')
+    return
+  })
 }

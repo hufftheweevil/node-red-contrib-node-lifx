@@ -1,4 +1,4 @@
-<script type="text/x-red" data-template-name="node-lifx-server">
+<script type="text/html" data-template-name="lifx server">
   <div class="form-row">
     <label for="node-config-input-address"><i class="fa fa-globe"></i> Address</label>
     <input type="text" id="node-config-input-address" placeholder="Optional interface address">
@@ -21,7 +21,7 @@
   </div>
 </script>
 
-<script type="text/x-red" data-help-name="node-lifx-server">
+<script type="text/html" data-help-name="lifx server">
   <p>Server managing communication with Lifx lights.</p>
   <p><b>Notice:</b> The server by default tries to bind to all addresses which makes it impossible to run multiple servers on the same host</p>
   <ul>
@@ -34,23 +34,23 @@
 </script>
 
 <script type="text/javascript">
-RED.nodes.registerType('node-lifx-server',{
-  category: 'config',
-  defaults: {
-    name:      { value: 'Lifx Server', required: true  },
-    address:   { required: false },
-    broadcast: { required: false },
-    lights:    { required: false },
-    interval: {
-      value: 10000,
-      required: true,
-      validate: function(v) {
-        return (/^[0-9]+/.test(v) && parseInt(v,10) >= 500);
-      },
+  RED.nodes.registerType('lifx server', {
+    category: 'config',
+    defaults: {
+      name: { value: 'Lifx Server', required: true },
+      address: { required: false },
+      broadcast: { required: false },
+      lights: { required: false },
+      interval: {
+        value: 10000,
+        required: true,
+        validate: function (v) {
+          return /^[0-9]+/.test(v) && parseInt(v, 10) >= 500
+        }
+      }
     },
-  },
-  label: function() {
-    return this.name;
-  }
-});
+    label: function () {
+      return this.name
+    }
+  })
 </script>
