@@ -32,10 +32,16 @@ module.exports = function (RED) {
       let idList = msg.topic || config.lightID
       idList.split(',').forEach(id => {
         let lightID = lightLookups.get(id)
-        if (!lightID) return
+        if (!lightID) {
+          node.warn(`Light ${id} not found`)
+          return
+        }
 
         let handler = server.getLightHandler(lightID)
-        if (!handler) return
+        if (!handler) {
+          node.warn(`Unable to connect to ${lightID} (${id})`)
+          return
+        }
 
         try {
           if (msg.payload.waveform) {
